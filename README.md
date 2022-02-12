@@ -18,9 +18,18 @@
 
 答：p24-p25 ；还有 p141-p156 有 regularization 的应用
 
+
 #### 2. 简单介绍一下贝叶斯概率与频率派概率，以及在统计中对于真实参数的假设。
 
-答：p35
+答：  the frequentist perspective is that the true
+parameter value θ is fixed but unknown, while the point estimate θˆ is a random
+variable on account of it being a function of the **dataset (which is seen as random)**.
+The Bayesian perspective on statistics is quite different. The Bayesian uses
+probability to reflect degrees of certainty of states of knowledge. The dataset is
+directly observed and so is not random. On the other hand, the true parameter θ
+is unknown or uncertain and thus is represented as a random variable.
+
+from DL
 
 #### 3. 概率密度的万能近似器
 
@@ -37,6 +46,15 @@
 #### 6.KL 散度在信息论中度量的是那个直观量
 
 答：p46
+Given two distributions p and q, it is often useful to define a distance metric to measure how “close”
+or “similar” they are.  we can interpret
+the KL divergence as the “extra number of bits” you need to pay when compressing data samples
+ if you use the incorrect distribution q as the basis of your coding scheme compared to the true
+ distribution p
+ 
+ from PML
+
+
 
 #### 7. 数值计算中的计算上溢与下溢问题，如 softmax 中的处理方式
 
@@ -64,7 +82,18 @@
 
 #### 13. 高斯分布的广泛应用的缘由
 
-答：p40
+答：
+The Gaussian distribution is the most widely used distribution in statistics and machine learning.
+There are several reasons for this. First, it has **two parameters which are easy to interpret**, and which
+capture some of the most basic properties of a distribution, namely its mean and variance. Second,
+the **central limit theorem** tells us that sums of independent random variables have an
+approximately Gaussian distribution, making it a good choice for modeling residual errors or “noise”.
+Third, the Gaussian distribution makes the **least number of assumptions (has maximum entropy)**,
+subject to the constraint of having a specified mean and variance, as we show in Section 3.4.4; this
+makes it a good default choice in many cases. Finally, it has a **simple mathematical form**, which
+results in easy to implement, but often highly effective, methods 
+from PML p58
+
 
 #### 14. 最大似然估计中最小化 KL 散度与最小化分布之间的交叉熵的关系
 
@@ -78,7 +107,7 @@
 
 答：p92
 
-#### 17. 列举一些无法基于地图 (梯度？) 的优化来最小化的代价函数及其具有的特点
+#### 17. 列举一些无法基于梯度 的优化来最小化的代价函数及其具有的特点
 
 答：p97 维度灾难
 
@@ -109,6 +138,9 @@
 #### 24. 表示学习的发展的初衷？并介绍其典型例子: 自编码器
 
 答：p3
+对于许多任务来说，我们很难知道应该提取哪些特征。例如，假设我们想 编写一个程序来检测照片中的车。我们知道，汽车有轮子，所以我们可能会想用车 轮的存在与否作为特征。不幸的是，我们难以准确地根据像素值来描述车轮看上去 像什么。虽然车轮具有简单的几何形状，但它的图像可能会因场景而异，如落在车 轮上的阴影、太阳照亮的车轮的金属零件、汽车的挡泥板或者遮挡的车轮一部分的 前景物体等等。
+解决这个问题的途径之一是使用机器学习来发掘表示本身，而不仅仅把表示映 射到输出。这种方法我们称之为 表示学习(representation learning)。学习到的表 示往往比手动设计的表示表现得更好。并且它们只需最少的人工干预，就能让AI系 统迅速适应新的任务。表示学习算法只需几分钟就可以为简单的任务发现一个很好 的特征集，对于复杂任务则需要几小时到几个月。手动为一个复杂的任务设计特征 需要耗费大量的人工时间和精力;甚至需要花费整个社群研究人员几十年的时间。
+表示学习算法的典型例子是 自编码器(autoencoder)。自编码器由一个 编码器 (encoder)函数和一个 解码器(decoder)函数组合而成。编码器函数将输入数据转 换为一种不同的表示，而解码器函数则将这个新的表示转换到原来的形式。我们期 望当输入数据经过编码器和解码器之后**尽可能多地保留信息**，同时希望新的表示有 各种好的特性，这也是自编码器的训练目标
 
 #### 25. 在做正则化过程中，为什么只对权重做正则惩罚，而不对偏置做权重惩罚
 
