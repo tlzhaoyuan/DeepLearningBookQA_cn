@@ -51,12 +51,14 @@ or “similar” they are.  we can interpret
 the KL divergence as the “extra number of bits” you need to pay when compressing data samples
  if you use the incorrect distribution q as the basis of your coding scheme compared to the true
  distribution p
- 
+
  from PML
 
 
 
 #### 7. 数值计算中的计算上溢与下溢问题，如 softmax 中的处理方式
+
+考虑一下当所有 xi 都等于某个常数 c 时会发生什么。从理论分析上说，我们可以发 现所有的输出都应该为 n1 。从数值计算上说，当 c 量级很大时，这可能不会发生。如 果 c 是很小的负数，exp(c) 就会下溢。这意味着 softmax 函数的分母会变成 0，所以 最后的结果是未定义的。当 c 是非常大的正数时，exp(c) 的上溢再次导致整个表达 式未定义。这两个困难能通过计算 softmax(z) 同时解决，其中 z = x − maxi xi。简 单的代数计算表明，softmax 解析上的函数值不会因为从输入向量减去或加上标量 而改变。减去 maxi xi 导致 exp 的最大参数为 0，这排除了上溢的可能性。同样地， 分母中至少有一个值为 1 的项，这就排除了因分母下溢而导致被零除的可能性
 
 答：p52-p53
 
@@ -75,6 +77,10 @@ the KL divergence as the “extra number of bits” you need to pay when compres
 #### 11. 模型容量，表示容量，有效容量，最优容量概念
 
 答：p70;p71;p72
+
+Informally, a model’s capacity is its ability to fit a wide variety of functions. Models with low capacity may struggle to fit the training set. Models with high capacity can overfit by memorizing properties of the training set that do not serve them well on the test set. One way to control the capacity of a learning algorithm is by choosing its hypothesis space, the set of functions that the learning algorithm is allowed to select as being the solution. e.g. linear regression, cap(polynomial reg) > cap(linear).
+
+The model specifies which family of functions the learning algorithm can choose from when varying the parameters in order to reduce a training objective. This is called the **representational capacity** of the model. In many cases, finding the best function within this family is a very difficult optimization problem. In practice, the learning algorithm does not actually find the best function, but merely one that significantly reduces the training error. These additional limitations, such as the imperfection of the optimization algorithm, mean that the learning algorithm’s effective capacity may be less than the representational capacity of the model family.
 
 #### 12. 正则化中的权重衰减与加入先验知识在某些条件下的等价性
 
@@ -122,6 +128,8 @@ from PML p58
 #### 20. 梯度爆炸的一些解决办法
 
 答：p185
+
+One solution is to clip gradients (see section 10.11.1) while another is to scale the gradients heuristically
 
 #### 21.MLP 的万能近似性质
 
@@ -178,6 +186,25 @@ from PML p58
 
 答：p170    `Chapter 8.1.3`
 
+Minibatch sizes are generally driven by the following factors:
+
+* Larger batches provide a more accurate estimate of the gradient, but with less than linear returns.
+*  Multicore architectures are usually underutilized by extremely small batches. This motivates using some absolute minimum batch size, below which there is no reduction in the time to process a minibatch.
+
+- If all examples in the batch are to be processed in parallel (as is typically the case), then the amount of **memory** scales with the batch size. For many hardware setups this is the limiting factor in batch size.
+
+- Some kinds of hardware achieve better runtime with specific sizes of arrays. Especially when using GPUs, it is common for **power of 2** batch sizes to offer better runtime. Typical power of 2 batch sizes range from 32 to 256, with 16 sometimes being attempted for large models.
+
+- **Small batches can offer a regularizing effect (Wilson and Martinez, 2003), perhaps due to the noise they add to the learning process.** Generalization error is often best for a batch size of 1. Training with such a small batch size might require a small learning rate to maintain stability due to the high
+
+  variance in the estimate of the gradient. The total runtime can be very high due to the need to make more steps, both because of the reduced learning rate and because it takes more steps to observe the entire training set
+
+Different kinds of algorithms use different kinds of information from the mini- batch in different ways. Some algorithms are more sensitive to sampling error than others, either because they use information that is difficult to estimate accurately
+
+with few samples, or because they use information in ways that amplify sampling errors more. Methods that compute updates based only on the gradient g are usually relatively robust and can handle smaller batch sizes like 100. Second-order methods, which use also the Hessian matrix H and compute updates such as H−1g, typically require much larger batch sizes like 10,000. These large batch sizes are required to minimize fluctuations in the estimates of H−1g. Suppose that H is estimated perfectly but has a poor condition number. Multiplication by H or its inverse amplifies pre-existing errors, in this case, estimation errors in g. Very small changes in the estimate of g can thus cause large changes in the update H−1g, even if H were estimated perfectly. Of course, H will be estimated only approximately, so the update H−1g will contain even more error than we would
+
+predict from applying a poorly conditioned operation to the estimate of g.
+
 #### 34. 如何避免深度学习中的病态，鞍点，梯度爆炸，梯度弥散
 
 答：p173-p178    `Chapter 8.2.1`
@@ -216,6 +243,13 @@ BFGS:p193-p194    `Chapter 8.6.3`
 
 答：p207; p210   `Chapter 9.3-4`
 
+A pooling function replaces the output of the net at a certain location with a summary statistic of the nearby outputs.
+
+1. In all cases, pooling helps to make the representation become approximately **invariant to small translations of the input**. Invariance to translation means that if we translate the input by a small amount, the values of most of the pooled outputs do not change. For example, when determining whether an image contains a face, we need not know the location of the eyes with pixel-perfect accuracy, we just need to know that there is an eye on the left side of the face and an eye on the right side of the face. In other contexts, it is more important to preserve the location of a feature. For example, if we want to find a corner defined by two edges meeting at a specific orientation, we need to preserve the location of the edges well enough to test whether they meet.
+
+2. Because pooling summarizes the responses over a whole neighborhood, it is possible to use fewer pooling units than detector units, by reporting summary statistics for pooling regions spaced k pixels apart rather than 1 pixel apart. See figure 9.10 for an example. This improves the **computational efficiency** of the network because the next layer has roughly k times fewer inputs to process.
+3. For many tasks, pooling is essential for **handling inputs of varying size**. For example, if we want to classify images of variable size, the input to the classification layer must have a fixed size. e.g. GAP, ROI pooling
+
 #### 42. 循环神经网络常见的一些依赖循环关系，常见的一些输入输出，以及对应的应用场景
 
 答：p230-p238    `Chapter 10.2`
@@ -239,8 +273,13 @@ ICA:p298    `Chapter 13.2`
 #### 46. 自编码器在深度学习中的意义，以及一些常见的变形与应用
 
 答：意义: p306     `Chapter 14.1` 
+
+
+
 常见变形: p306-p313    `Chapter 14.5` 
 应用: p319   `Chapter 14.9` 
+
+Autoencoders have been successfully applied to dimensionality reduction and information retrieval tasks.
 
 #### 47. 受限玻尔兹曼机广泛应用的原因
 
@@ -270,6 +309,16 @@ ICA:p298    `Chapter 13.2`
 #### 53. 举例 CNN 中的 channel 在不同数据源中的含义
 
 答：p219-220    `Chapter 9.7` 
+
+
+
+|      | single channel                                               | multi-channel           |
+| ---- | ------------------------------------------------------------ | ----------------------- |
+| 1D   | Audio waveform                                               | Skeleton animation data |
+| 2D   | Audio data that has been preprocessed with a Fourier transform | Color image data        |
+| 3D   | Volumetric data: CT                                          | Color video data        |
+
+
 
 #### 54. 深度学习在 NLP，语音，图像等领域的应用及常用的一些模型
 
